@@ -77,7 +77,40 @@ yarn install --registry https://registry.npmjs.org
 
 ---
 
-### 6. 依赖版本兼容性
+### 6. `.gitconfig` URL 重写导致 SSH 失效
+
+**现象：** `git remote` 配置了 SSH 地址，但 `git push` 仍然走 HTTPS
+
+**原因：** `~/.gitconfig` 中存在 URL 重写规则：
+```ini
+[url "https://github.com/"]
+    insteadOf = ssh://git@github.com/
+    insteadOf = git@github.com:
+```
+
+**解决方案：** 删除这些重写规则：
+```bash
+git config --global --unset-all url.https://github.com/.insteadof
+git config --global --unset-all url.https://github.com/.insteadof
+```
+
+---
+
+### 7. Deploy Key vs Personal SSH Key
+
+**现象：** SSH 认证成功但 `Permission denied`，显示 `denied to deploy key`
+
+**原因：** Deploy key 是仓库级别的，且默认只读。一个 deploy key 只能访问一个仓库。
+
+**规则：**
+- **Deploy Key** — 单仓库访问，默认只读
+- **Personal SSH Key** — 所有仓库访问，读写权限
+
+**解决方案：** 如果需要推送多个仓库，将 SSH key 作为 Personal Key 添加到 GitHub 账号（Settings → SSH and GPG keys），而不是单个仓库的 deploy key。
+
+---
+
+### 8. 依赖版本兼容性
 
 **现象：** 各种类型错误或安装失败
 
