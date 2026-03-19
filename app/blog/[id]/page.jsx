@@ -16,7 +16,7 @@ export default function BlogDetailPage() {
     if (!params.id) return;
     
     setLoading(true);
-    fetch(`/api/blog/${params.id}/`)
+    fetch(`/api/blog/${params.id}`)
       .then((res) => res.json())
       .then((data) => {
         setContent(data);
