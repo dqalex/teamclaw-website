@@ -1,93 +1,58 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { LandingNavbar } from '@/components/LandingNavbar';
 import { BookOpen, FileText, ChevronRight, Search, Users, Shield, Wrench, Zap, Code, Database } from 'lucide-react';
 
-const wikiPages = [
-  { 
-    id: 'user-guide', 
-    title: '用户手册', 
-    description: 'TeamClaw 完整用户手册，学习如何使用所有功能', 
-    category: '指南',
-    icon: BookOpen
-  },
-  { 
-    id: 'prd', 
-    title: '产品需求文档 (PRD)', 
-    description: '了解 TeamClaw 的产品规划和功能需求', 
-    category: '产品',
-    icon: FileText
-  },
-  { 
-    id: 'api-reference', 
-    title: 'API 参考', 
-    description: '完整的 API 文档，了解如何集成 TeamClaw', 
-    category: '技术',
-    icon: Code
-  },
-  { 
-    id: 'multi-user-access', 
-    title: '多用户访问控制', 
-    description: '了解企业级多用户系统和权限管理', 
-    category: '安全',
-    icon: Users
-  },
-  { 
-    id: 'approval-system', 
-    title: '审批系统设计', 
-    description: '通用审批系统的技术实现和使用指南', 
-    category: '技术',
-    icon: Shield
-  },
-  { 
-    id: 'skill-management', 
-    title: 'Skill 管理系统', 
-    description: 'AI Skill 生命周期管理的完整指南', 
-    category: '功能',
-    icon: Wrench
-  },
-  { 
-    id: 'sop-engine', 
-    title: 'SOP 工作流引擎', 
-    description: '深入了解 SOP 引擎的架构和使用方法', 
-    category: '功能',
-    icon: Zap
-  },
-  { 
-    id: 'openclaw-sync', 
-    title: 'OpenClaw 同步设计', 
-    description: '了解与 OpenClaw Gateway 的深度集成', 
-    category: '集成',
-    icon: Database
-  },
+const iconMap = {
+  BookOpen,
+  FileText,
+  Users,
+  Shield,
+  Wrench,
+  Zap,
+  Code,
+  Database,
+};
+
+const defaultWikiPages = [
+  { id: 'user-guide', title: '用户手册', description: 'TeamClaw 完整用户手册', category: '指南', icon: 'BookOpen' },
 ];
 
 export default function WikiPage() {
   const [locale, setLocale] = useState('zh');
   const [searchQuery, setSearchQuery] = useState('');
+  const [wikiPages, setWikiPages] = useState(defaultWikiPages);
 
-  const t = {
-    en: {
-      title: 'Wiki',
-      subtitle: 'Documentation and guides for TeamClaw',
-      searchPlaceholder: 'Search documentation...',
-      backToHome: 'Back to Home',
-      readMore: 'Read more',
-    },
-    zh: {
-      title: 'Wiki 文档',
-      subtitle: 'TeamClaw 的文档和指南',
-      searchPlaceholder: '搜索文档...',
-      backToHome: '返回首页',
-      readMore: '阅读更多',
-    },
-  }[locale];
+  useEffect(() => {
+    fetch('/api/wiki')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setWikiPages(data);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const t = locale === 'zh' ? {
+    title: 'Wiki 文档',
+    subtitle: 'TeamClaw 的文档和指南',
+    searchPlaceholder: '搜索文档...',
+    backToHome: '返回首页',
+    readMore: '阅读更多',
+  } : {
+    title: 'Wiki',
+    subtitle: 'Documentation and guides for TeamClaw',
+    searchPlaceholder: 'Search documentation...',
+    backToHome: 'Back to Home',
+    readMore: 'Read more',
+  };
 
   const filteredPages = wikiPages.filter(page =>
-    page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    page.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    page.category.toLowerCase().includes(searchQuery.toLowerCase())
+    page.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    page.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    page.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -123,7 +88,7 @@ export default function WikiPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {filteredPages.map((page) => {
-              const Icon = page.icon || FileText;
+              const Icon = iconMap[page.icon] || FileText;
               return (
                 <a
                   key={page.id}

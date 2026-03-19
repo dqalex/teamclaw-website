@@ -42,7 +42,7 @@ export default function HomePage() {
       ctaTitle: 'Ready to Get Started?',
       ctaDesc: 'Join the community and start building with TeamClaw today.',
       startUsing: 'Start Using TeamClaw',
-      footer: '© 2026 TeamClaw. Open source under MIT License. v1.0.0',
+      footer: '© 2026 TeamClaw. Open source under MIT License. v1.0',
     },
     zh: {
       heroBadge: 'v1.0 正式发布',
@@ -73,7 +73,7 @@ export default function HomePage() {
       ctaTitle: '准备好开始了吗？',
       ctaDesc: '加入社区，今天就开始使用 TeamClaw 构建。',
       startUsing: '开始使用 TeamClaw',
-      footer: '© 2026 TeamClaw。基于 MIT 许可证开源。v1.0.0',
+      footer: '© 2026 TeamClaw。基于 MIT 许可证开源。v1.0',
     },
   }[locale];
 
