@@ -21,7 +21,7 @@ export default function BlogPage() {
   const [blogPosts, setBlogPosts] = useState(defaultBlogPosts);
 
   useEffect(() => {
-    fetch('/api/blog')
+    fetch('/api/blog/')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

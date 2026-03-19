@@ -25,7 +25,7 @@ export default function WikiPage() {
   const [wikiPages, setWikiPages] = useState(defaultWikiPages);
 
   useEffect(() => {
-    fetch('/api/wiki')
+    fetch('/api/wiki/')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

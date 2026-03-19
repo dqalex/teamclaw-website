@@ -16,7 +16,7 @@ export default function WikiDetailPage() {
     if (!params.id) return;
     
     setLoading(true);
-    fetch(`/api/wiki/${params.id}`)
+    fetch(`/api/wiki/${params.id}/`)
       .then((res) => res.json())
       .then((data) => {
         setContent(data);
