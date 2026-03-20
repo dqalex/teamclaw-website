@@ -1,60 +1,65 @@
-'use client';
-
-import { useState, Suspense, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { LandingNavbar } from '@/components/LandingNavbar';
 import { Calendar, User, Tag, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { getBlogContent, getBlogFiles } from '@/lib/content';
 
-export default function BlogDetailPage() {
-  const params = useParams();
-  const [locale, setLocale] = useState('en');
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
+// 预生成所有 blog 页面的静态路径
+export async function generateStaticParams() {
+  const files = getBlogFiles();
+  return files.map((file) => ({
+    id: file.id,
+  }));
+}
 
-  useEffect(() => {
-    if (!params.id) return;
-    
-    setLoading(true);
-    fetch(`/api/blog/${params.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setContent(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching blog content:', err);
-        setLoading(false);
-      });
-  }, [params.id]);
+// 生成 meta 信息
+export async function generateMetadata({ params }) {
+  try {
+    const content = await getBlogContent(params.id);
+    return {
+      title: `${content.title} | TeamClaw Blog`,
+      description: content.description || `${content.title} - TeamClaw 官方博客`,
+      openGraph: {
+        title: content.title,
+        description: content.description,
+        type: 'article',
+        publishedTime: content.date,
+        authors: content.author ? [content.author] : undefined,
+        tags: content.tags,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: content.title,
+        description: content.description,
+      },
+    };
+  } catch {
+    return {
+      title: 'Blog | TeamClaw',
+    };
+  }
+}
 
-  const t = locale === 'zh' ? {
-    backToBlog: '返回博客',
-  } : {
-    backToBlog: 'Back to Blog',
-  };
+export default async function BlogDetailPage({ params }) {
+  let content;
+  let error = false;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#020617] text-white">
-        <Suspense fallback={<div className="h-16" />}>
-          <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-        </Suspense>
-        <div className="pt-32 pb-20 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="text-slate-400">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
+  try {
+    content = await getBlogContent(params.id);
+  } catch (e) {
+    error = true;
   }
 
-  if (!content || content.error) {
+  const locale = 'zh';
+
+  const t = {
+    backToBlog: '返回博客',
+  };
+
+  if (error || !content) {
     return (
       <div className="min-h-screen bg-[#020617] text-white">
-        <Suspense fallback={<div className="h-16" />}>
-          <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-        </Suspense>
+        <LandingNavbar locale={locale} />
+        
         <div className="pt-32 pb-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl font-bold mb-4">文章未找到</h1>
@@ -69,9 +74,7 @@ export default function BlogDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-[#0056ff]/30">
-      <Suspense fallback={<div className="h-16" />}>
-        <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-      </Suspense>
+      <LandingNavbar locale={locale} />
       
       <article className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -97,18 +100,22 @@ export default function BlogDetailPage() {
               {content.title}
             </h1>
             <div className="flex flex-wrap items-center gap-6 text-slate-400">
-              <span className="flex items-center gap-2">
-                <Calendar size={16} />
-                {content.date}
-              </span>
-              <span className="flex items-center gap-2">
-                <User size={16} />
-                {content.author}
-              </span>
+              {content.date && (
+                <span className="flex items-center gap-2">
+                  <Calendar size={16} />
+                  {content.date}
+                </span>
+              )}
+              {content.author && (
+                <span className="flex items-center gap-2">
+                  <User size={16} />
+                  {content.author}
+                </span>
+              )}
             </div>
           </header>
 
-          {/* 内容区域 */}
+          {/* 内容区域 - 直接嵌入 HTML，SEO 友好 */}
           <div 
             className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-400 prose-li:text-slate-400"
             dangerouslySetInnerHTML={{ __html: content.htmlContent }}

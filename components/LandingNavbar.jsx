@@ -51,9 +51,6 @@ export function LandingNavbar({ locale, onLocaleChange }) {
               <FileText size={16} />
               {t.blog}
             </a>
-            <a href="#" className="text-slate-300 hover:text-white transition-colors">
-              {t.docs}
-            </a>
             <button
               onClick={() => onLocaleChange(locale === 'en' ? 'zh' : 'en')}
               className="px-3 py-1.5 text-sm text-slate-300 hover:text-white border border-slate-700 rounded-lg hover:border-slate-600 transition-colors"
@@ -102,9 +99,6 @@ export function LandingNavbar({ locale, onLocaleChange }) {
             <a href="/blog" className="block text-slate-300 hover:text-white flex items-center gap-2">
               <FileText size={16} />
               {t.blog}
-            </a>
-            <a href="#" className="block text-slate-300 hover:text-white">
-              {t.docs}
             </a>
             <button
               onClick={() => {

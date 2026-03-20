@@ -1,62 +1,58 @@
-'use client';
-
-import { useState, Suspense, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { LandingNavbar } from '@/components/LandingNavbar';
-import { ChevronRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Folder } from 'lucide-react';
 import Link from 'next/link';
+import { getWikiContent, getWikiFiles } from '@/lib/content';
 
-export default function WikiDetailPage() {
-  const params = useParams();
-  const [locale, setLocale] = useState('zh');
-  const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
+// 预生成所有 wiki 页面的静态路径
+export async function generateStaticParams() {
+  const files = getWikiFiles();
+  return files.map((file) => ({
+    id: file.id,
+  }));
+}
 
-  useEffect(() => {
-    if (!params.id) return;
-    
-    setLoading(true);
-    fetch(`/api/wiki/${params.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setContent(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching wiki content:', err);
-        setLoading(false);
-      });
-  }, [params.id]);
+// 生成 meta 信息
+export async function generateMetadata({ params }) {
+  try {
+    const content = await getWikiContent(params.id);
+    return {
+      title: `${content.title} | TeamClaw Wiki`,
+      description: content.description || `${content.title} - TeamClaw 官方文档`,
+      openGraph: {
+        title: content.title,
+        description: content.description,
+        type: 'article',
+      },
+    };
+  } catch {
+    return {
+      title: 'Wiki | TeamClaw',
+    };
+  }
+}
 
-  const t = locale === 'zh' ? {
-    backToWiki: '返回 Wiki',
-    backToHome: '返回首页',
-  } : {
-    backToWiki: 'Back to Wiki',
-    backToHome: 'Back to Home',
-  };
+export default async function WikiDetailPage({ params }) {
+  let content;
+  let error = false;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#020617] text-white">
-        <Suspense fallback={<div className="h-16" />}>
-          <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-        </Suspense>
-        <div className="pt-32 pb-20 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="text-slate-400">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
+  try {
+    content = await getWikiContent(params.id);
+  } catch (e) {
+    error = true;
   }
 
-  if (!content || content.error) {
+  // 支持中英文
+  const locale = 'zh';
+
+  const t = {
+    backToWiki: '返回 Wiki',
+  };
+
+  if (error || !content) {
     return (
       <div className="min-h-screen bg-[#020617] text-white">
-        <Suspense fallback={<div className="h-16" />}>
-          <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-        </Suspense>
+        <LandingNavbar locale={locale} />
+        
         <div className="pt-32 pb-20 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl font-bold mb-4">页面未找到</h1>
@@ -71,9 +67,7 @@ export default function WikiDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-[#0056ff]/30">
-      <Suspense fallback={<div className="h-16" />}>
-        <LandingNavbar locale={locale} onLocaleChange={setLocale} />
-      </Suspense>
+      <LandingNavbar locale={locale} />
       
       <article className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -88,16 +82,22 @@ export default function WikiDetailPage() {
           {/* 标题区域 */}
           <header className="mb-12">
             <div className="flex flex-wrap gap-2 mb-6">
-              <span className="text-xs px-3 py-1.5 bg-slate-800 rounded-full text-slate-400">
-                {content.category}
-              </span>
+              {content.category && (
+                <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-slate-800 rounded-full text-slate-400">
+                  <Folder size={12} />
+                  {content.category}
+                </span>
+              )}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               {content.title}
             </h1>
+            {content.description && (
+              <p className="text-xl text-slate-400">{content.description}</p>
+            )}
           </header>
 
-          {/* 内容区域 */}
+          {/* 内容区域 - 直接嵌入 HTML，SEO 友好 */}
           <div 
             className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-400 prose-li:text-slate-400"
             dangerouslySetInnerHTML={{ __html: content.htmlContent }}
